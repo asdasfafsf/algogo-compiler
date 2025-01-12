@@ -15,11 +15,6 @@ RUN apt-get update && apt-get install -y \
     software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Amazon Corretto 21 (JDK 21)
-RUN wget -O- https://apt.corretto.aws/corretto.key | gpg --dearmor | tee /usr/share/keyrings/amazon-corretto-archive-keyring.gpg
-RUN echo 'deb [signed-by=/usr/share/keyrings/amazon-corretto-archive-keyring.gpg] https://apt.corretto.aws stable main' | tee /etc/apt/sources.list.d/corretto.list
-RUN apt-get update && apt-get install -y java-21-amazon-corretto-jdk
-
 # Install Node.js 22 (via NodeSource)
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y nodejs && \
@@ -28,17 +23,20 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
 # Install pnpm
 RUN npm install -g pnpm
 
-# Install Nest CLI globally
-RUN npm i -g @nestjs/cli
+# Set working directory
+WORKDIR /usr/src/app
 
-# Verify installations
-RUN g++ --version && \
-    python3 --version && \
-    java --version && \
-    node --version && \
-    npm --version && \
-    pnpm --version && \
-    nest --version
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
 
-# Set default command
-CMD ["/bin/bash"]
+# Install only production dependencies
+RUN pnpm install --frozen-lockfile --prod
+
+# Copy dist folder from local machine
+COPY dist ./dist
+
+# Set environment variables for production
+ENV NODE_ENV=production
+
+# Default command
+CMD ["node", "dist/main"]
