@@ -105,6 +105,7 @@ export class InterpretService implements Execute {
       this.handleError(error);
       throw error;
     } finally {
+      this.fileService.removeDir(tmpPath);
     }
   }
   handleError(error: Error) {}
