@@ -1,58 +1,52 @@
-# --- Step 1: Build Stage ---
-FROM ubuntu:24.04 AS builder
+# --- Step 1: Build Stage (Node.js 빌드 전용) ---
+FROM node:22-alpine AS builder
 
-# Set environment variables to prevent interactive prompts
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Update the package list and install essential packages
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    g++ \
-    curl \
-    python3 \
-    python3-pip \
-    wget \
-    software-properties-common \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Node.js 22 (via NodeSource)
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install pnpm
-RUN npm install -g pnpm
-
-# Set working directory
 WORKDIR /usr/src/app
 
-# Copy package files
 COPY package.json pnpm-lock.yaml ./
-
-# Install all dependencies (including devDependencies)
+RUN npm install -g pnpm
+RUN npm install -g @nestjs/cli
 RUN pnpm install --frozen-lockfile
 
-# Copy application source code
 COPY . .
-
-# Build the application
 RUN pnpm build
 
 # --- Step 2: Production Stage ---
 FROM ubuntu:24.04
 
-# Set environment variables to prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update the package list and install Node.js 22
+# Update package list and install runtime dependencies
 RUN apt-get update && apt-get install -y \
+    build-essential \
+    g++ \
+    python3 \
+    python3-pip \
+    wget \
+    software-properties-common \
     curl \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 22 (to provide npm and pnpm)
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 
-# Install pnpm
-RUN npm install -g pnpm
+# Determine the architecture and install the appropriate Amazon Corretto JDK
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        wget -O- https://corretto.aws/downloads/latest/amazon-corretto-21-x64-linux-jdk.tar.gz | tar -xz -C /opt; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        wget -O- https://corretto.aws/downloads/latest/amazon-corretto-21-aarch64-linux-jdk.tar.gz | tar -xz -C /opt; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    ln -s /opt/amazon-corretto-21.* /opt/amazon-corretto-21 && \
+    ln -s /opt/amazon-corretto-21/bin/java /usr/bin/java && \
+    ln -s /opt/amazon-corretto-21/bin/javac /usr/bin/javac
+
+# Verify JDK installation
+RUN java -version
 
 # Set working directory
 WORKDIR /usr/src/app
@@ -62,14 +56,8 @@ COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/package.json ./package.json
 COPY --from=builder /usr/src/app/pnpm-lock.yaml ./pnpm-lock.yaml
 
-# Install only production dependencies
-RUN pnpm install --frozen-lockfile --prod
-
-# Set environment variables for production
-ENV NODE_ENV=production
-
-# Expose application port
-EXPOSE 3050
+# Install pnpm and only production dependencies
+RUN npm install -g pnpm && pnpm install --frozen-lockfile --prod
 
 # Default command
 CMD ["node", "dist/main"]
