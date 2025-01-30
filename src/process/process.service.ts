@@ -51,7 +51,7 @@ export class ProcessService {
           await this.processManagementService.getProcessUsage(childProcess.pid);
         const { memory } = processUsage;
         currentMemory = Math.max(memory, currentMemory);
-      } catch (e) {
+      } catch {
         clearInterval(checkProcessUsageInterval);
       }
     }, 100);
@@ -61,8 +61,13 @@ export class ProcessService {
       const stdError = [];
 
       this.logger.silly('process input : ' + input);
-      childProcess.stdin.write(input);
-      childProcess.stdin.end();
+      if (input) {
+        childProcess.stdin.write(input);
+        childProcess.stdin.end();
+      } else {
+        childProcess.stdin.write('\n');
+        childProcess.stdin.end();
+      }
 
       childProcess.stdout.on('data', (e) => {
         result.push(e.toString());
@@ -104,9 +109,15 @@ export class ProcessService {
           case 'SIGBUS':
             reject(new Error('BusError'));
           default:
-            stdError.length === 0 && closeCode !== 0
-              ? reject(new Error('NZEC'))
-              : reject(new Error(stdError.join('')));
+            if (!stdError || stdError.length === 0) {
+              if (closeCode !== 0) {
+                reject(new Error('NZEC'));
+              } else {
+                reject(new Error('Unknown error'));
+              }
+            } else {
+              reject(new Error(stdError.join('')));
+            }
         }
       });
 
