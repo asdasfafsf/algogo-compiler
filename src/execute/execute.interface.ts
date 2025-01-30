@@ -1,4 +1,4 @@
-import ExecuteResultDto from "./dto/ExecuteResultDto";
+import ExecuteResultDto from './dto/ExecuteResultDto';
 
 export interface Execute {
   /**

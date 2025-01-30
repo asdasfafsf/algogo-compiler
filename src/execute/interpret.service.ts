@@ -76,10 +76,7 @@ export class InterpretService implements Execute {
     }
   }
 
-  async execute(
-    codePath: string,
-    input: string,
-  ): Promise<ExecuteResultDto> {
+  async execute(codePath: string, input: string): Promise<ExecuteResultDto> {
     const tmpPath = path.dirname(codePath);
 
     try {

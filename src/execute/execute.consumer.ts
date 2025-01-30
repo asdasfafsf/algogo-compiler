@@ -1,6 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { Inject } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   EXECUTE_SERVICE_FACTORY_NAME,
   ExecuteServiceFactory,
@@ -9,12 +9,16 @@ import CompileError from './error/compile-error';
 import RuntimeError from './error/runtime-error';
 import TimeoutError from './error/timeout-error';
 import ExecuteResultDto from './dto/ExecuteResultDto';
+import { FileService } from 'src/file/file.service';
+import * as path from 'path';
 
 @Processor('execute')
+@Injectable()
 export class ExecuteConsumer extends WorkerHost {
   constructor(
     @Inject(EXECUTE_SERVICE_FACTORY_NAME)
     private readonly executorFactory: ExecuteServiceFactory,
+    private readonly fileService: FileService,
   ) {
     super();
     this.cache = new Map();
@@ -32,6 +36,7 @@ export class ExecuteConsumer extends WorkerHost {
         const { code } = data;
         const compileResult = await executor.compile(code);
         this.cache.set(id, compileResult);
+
         return {
           ...compileResult,
         };
@@ -51,10 +56,15 @@ export class ExecuteConsumer extends WorkerHost {
         );
         return { ...executeResult, seq };
       } else {
-        this.cache.delete(id);
+        const compileResult = this.cache.get(id);
+        if (compileResult) {
+          this.cache.delete(id ?? '');
+          this.fileService.removeDir(path.dirname(compileResult.result));
+        }
         return true;
       }
     } catch (e) {
+      console.error(e.stack);
       const format = {
         processTime: 0,
         memory: 0,
@@ -91,7 +101,6 @@ export class ExecuteConsumer extends WorkerHost {
         result: '예외 오류',
       };
     } finally {
-      // this.cache.delete(id ?? '');
     }
   }
 }
