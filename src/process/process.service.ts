@@ -78,12 +78,18 @@ export class ProcessService {
       });
 
       childProcess.on('close', async (closeCode, closeResult) => {
+        const results = result.join('').split('\n');
+
+        if (results.at(-1) === '') {
+          results.pop();
+        }
+
         if (closeCode === 0) {
           resolve({
             code: '0000',
             processTime: Number((performance.now() - startTime).toFixed(1)),
             memory: Number((currentMemory / Math.pow(1024, 2)).toFixed(1)),
-            result: result.join(''),
+            result: results.join('\n'),
           });
           childProcess.kill('SIGKILL');
         }
