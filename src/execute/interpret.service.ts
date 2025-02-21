@@ -11,6 +11,7 @@ import PreprocessError from './error/preprocess-error';
 import RuntimeError from './error/runtime-error';
 import TimeoutError from './error/timeout-error';
 import ExecuteResultDto from './dto/ExecuteResultDto';
+import { CustomError } from './error/custom-error';
 
 @Injectable()
 export class InterpretService implements Execute {
@@ -62,6 +63,7 @@ export class InterpretService implements Execute {
       return {
         code: '0000',
         result: codePath,
+        detail: '',
         processTime: 0,
         memory: 0,
       };
@@ -69,6 +71,7 @@ export class InterpretService implements Execute {
       return {
         code: '9999',
         result: '전처리 오류',
+        detail: '',
         processTime: 0,
         memory: 0,
       };
@@ -103,7 +106,10 @@ export class InterpretService implements Execute {
       }
 
       this.handleError(error);
-      throw error;
+      throw new RuntimeError({
+        message: 'Unknown',
+        detail: '',
+      });
     } finally {
     }
   }

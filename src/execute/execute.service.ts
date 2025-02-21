@@ -10,6 +10,7 @@ import RuntimeError from './error/runtime-error';
 import { Logger } from 'winston';
 import TimeoutError from './error/timeout-error';
 import ExecuteResultDto from './dto/ExecuteResultDto';
+import { CustomError } from './error/custom-error';
 
 @Injectable()
 export class ExecuteService implements Execute {
@@ -94,7 +95,12 @@ export class ExecuteService implements Execute {
     } catch (e) {
       this.fileService.removeDir(tmpDir);
       this.logger.error(e);
-      throw new CompileError(e.message);
+      console.log('야야야야');
+      console.log(e.message);
+      throw new CompileError({
+        message: e.message,
+        detail: e.message,
+      });
     } finally {
     }
   }
@@ -138,8 +144,13 @@ export class ExecuteService implements Execute {
       if (e instanceof TimeoutError) {
         throw e;
       }
+
       this.handleError(e);
-      throw new RuntimeError('');
+
+      throw new RuntimeError({
+        message: 'Unknown',
+        detail: '',
+      });
     } finally {
     }
   }
