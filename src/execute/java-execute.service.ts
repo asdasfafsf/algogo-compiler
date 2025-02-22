@@ -47,85 +47,169 @@ export class JavaExecuteService extends ExecuteService {
 
   handleError(error: Error) {
     if (error.message.includes('java.util.NoSuchElementException')) {
-      throw new RuntimeError('NoSuchElementException');
+      throw new RuntimeError({
+        message: 'NoSuchElementException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.util.InputMismatchException')) {
-      throw new RuntimeError('InputMismatchException');
+      throw new RuntimeError({
+        message: 'InputMismatchException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.lang.NumberFormatException')) {
-      throw new RuntimeError('NumberFormatException');
+      throw new RuntimeError({
+        message: 'NumberFormatException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.lang.IndexOutOfBoundsException')) {
-      throw new RuntimeError('IndexOutOfBoundsException');
+      throw new RuntimeError({
+        message: 'IndexOutOfBoundsException',
+        detail: error.message,
+      });
     } else if (
       error.message.includes('java.lang.ArrayIndexOutOfBoundsException')
     ) {
-      throw new RuntimeError('ArrayIndexOutOfBoundsException');
+      throw new RuntimeError({
+        message: 'ArrayIndexOutOfBoundsException',
+        detail: error.message,
+      });
     } else if (
       error.message.includes('java.lang.StringIndexOutOfBoundsException')
     ) {
-      throw new RuntimeError('StringIndexOutOfBoundsException');
+      throw new RuntimeError({
+        message: 'StringIndexOutOfBoundsException',
+        detail: error.message,
+      });
     } else if (
       error.message.includes('java.lang.ArithmeticException: divide by zero')
     ) {
-      throw new RuntimeError('ArithmeticException: divide by zero');
+      throw new RuntimeError({
+        message: 'ArithmeticException: divide by zero',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.lang.ArithmeticException')) {
-      throw new RuntimeError('ArithmeticException');
+      throw new RuntimeError({
+        message: 'ArithmeticException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.lang.StackOverflowError')) {
-      throw new RuntimeError('StackOverflowError');
+      throw new RuntimeError({
+        message: 'StackOverflowError',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.io.FileNotFoundException')) {
-      throw new RuntimeError('FileNotFoundException');
+      throw new RuntimeError({
+        message: 'FileNotFoundException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.lang.NullPointerException')) {
-      throw new RuntimeError('NullPointerException');
+      throw new RuntimeError({
+        message: 'NullPointerException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.io.IOException')) {
-      throw new RuntimeError('IOException');
+      throw new RuntimeError({
+        message: 'IOException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.lang.IllegalArgumentException')) {
-      throw new RuntimeError('IllegalArgumentException');
+      throw new RuntimeError({
+        message: 'IllegalArgumentException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.util.EmptyStackException')) {
-      throw new RuntimeError('EmptyStackException');
+      throw new RuntimeError({
+        message: 'EmptyStackException',
+        detail: error.message,
+      });
     } else if (
       error.message.includes('java.util.IllegalFormatConversionException')
     ) {
-      throw new RuntimeError('IllegalFormatConversionException');
+      throw new RuntimeError({
+        message: 'IllegalFormatConversionException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.security.AccessControlException')) {
-      throw new RuntimeError('AccessControlException');
+      throw new RuntimeError({
+        message: 'AccessControlException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.lang.NegativeArraySizeException')) {
-      throw new RuntimeError('NegativeArraySizeException');
+      throw new RuntimeError({
+        message: 'NegativeArraySizeException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.lang.IllegalStateException')) {
-      throw new RuntimeError('IllegalStateException');
+      throw new RuntimeError({
+        message: 'IllegalStateException',
+        detail: error.message,
+      });
     } else if (
       error.message.includes('java.util.UnknownFormatConversionException')
     ) {
-      throw new RuntimeError('UnknownFormatConversionException');
+      throw new RuntimeError({
+        message: 'UnknownFormatConversionException',
+        detail: error.message,
+      });
     } else if (
       error.message.includes('java.util.ConcurrentModificationException')
     ) {
-      throw new RuntimeError('ConcurrentModificationException');
+      throw new RuntimeError({
+        message: 'ConcurrentModificationException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.lang.ClassCastException')) {
-      throw new RuntimeError('ClassCastException');
+      throw new RuntimeError({
+        message: 'ClassCastException',
+        detail: error.message,
+      });
     } else if (error.message.includes('java.lang.ArrayStoreException')) {
-      throw new RuntimeError('ArrayStoreException');
+      throw new RuntimeError({
+        message: 'ArrayStoreException',
+        detail: error.message,
+      });
     } else if (
       error.message.includes('java.lang.UnsupportedOperationException')
     ) {
-      throw new RuntimeError('UnsupportedOperationException');
+      throw new RuntimeError({
+        message: 'UnsupportedOperationException',
+        detail: error.message,
+      });
     } else if (
       error.message.includes('Error: Could not find or load main class Main')
     ) {
-      throw new RuntimeError('Could not find or load main class Main');
+      throw new RuntimeError({
+        message: 'Could not find or load main class Main',
+        detail: error.message,
+      });
     } else if (
       error.message.includes(
         'Error: Main method must return a value of type void in class Main',
       )
     ) {
-      throw new RuntimeError('Main method must return a value of type void');
+      throw new RuntimeError({
+        message: 'Main method must return a value of type void',
+        detail: error.message,
+      });
     } else if (
       error.message.includes('Error: Main method is not static in class Main')
     ) {
-      throw new RuntimeError('Main method is not static');
+      throw new RuntimeError({
+        message: 'Main method is not static',
+        detail: error.message,
+      });
     } else if (
       error.message.includes('Error: Main method not found in class Main')
     ) {
-      throw new RuntimeError('Main method not found');
+      throw new RuntimeError({
+        message: 'Main method not found',
+        detail: error.message,
+      });
     }
 
-    throw new RuntimeError('');
+    throw new RuntimeError({
+      message: 'Unknown',
+      detail: error.message,
+    });
   }
 }

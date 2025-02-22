@@ -36,41 +36,87 @@ export class CppExecuteService extends ExecuteService {
 
   handleError(error: Error) {
     if (error.message === 'Segmentation fault') {
-      throw new RuntimeError('Segmentation fault');
+      throw new RuntimeError({
+        message: 'Segmentation fault',
+        detail: error.message,
+      });
     } else if (
       error.message.includes('Buffer contains: This is a') ||
       error.message.includes('buffer overflow detected')
     ) {
-      throw new RuntimeError('BufferOverflow');
+      throw new RuntimeError({
+        message: 'BufferOverflow',
+        detail: error.message,
+      });
     } else if (error.message.includes('free(): invalid pointer')) {
-      throw new RuntimeError('InvalidPointer');
+      throw new RuntimeError({
+        message: 'InvalidPointer',
+        detail: error.message,
+      });
     } else if (error.message.includes('double free or corruption')) {
-      throw new RuntimeError('DoubleFree');
+      throw new RuntimeError({
+        message: 'DoubleFree',
+        detail: error.message,
+      });
     } else if (error.message.includes('malloc(): memory corruption')) {
-      throw new RuntimeError('MemoryCorruption');
+      throw new RuntimeError({
+        message: 'MemoryCorruption',
+        detail: error.message,
+      });
     } else if (error.message.includes('std::out_of_range')) {
-      throw new RuntimeError('out_of_range');
+      throw new RuntimeError({
+        message: 'out_of_range',
+        detail: error.message,
+      });
     } else if (
       error.message.includes('attempt to decrement a past-the-end iterator')
     ) {
-      throw new RuntimeError('PastTheEndIterator');
+      throw new RuntimeError({
+        message: 'PastTheEndIterator',
+        detail: error.message,
+      });
     } else if (error.message.includes('free(): invalid next size')) {
-      throw new RuntimeError('InvalidNextSize');
+      throw new RuntimeError({
+        message: 'InvalidNextSize',
+        detail: error.message,
+      });
     } else if (error.message.includes('std::bad_alloc')) {
-      throw new RuntimeError('bad_alloc');
+      throw new RuntimeError({
+        message: 'bad_alloc',
+        detail: error.message,
+      });
     } else if (error.message.includes('std::bad_array_new_length')) {
-      throw new RuntimeError('bad_array_new_length');
+      throw new RuntimeError({
+        message: 'bad_array_new_length',
+        detail: error.message,
+      });
     } else if (error.message.match(/Assertion\s+`([^']+)'\s+failed/)) {
-      throw new RuntimeError('AssertionFailed');
+      throw new RuntimeError({
+        message: 'AssertionFailed',
+        detail: error.message,
+      });
     } else if (error.message === 'BusError') {
-      throw new RuntimeError('BusError');
+      throw new RuntimeError({
+        message: 'BusError',
+        detail: error.message,
+      });
     } else if (error.message.includes('corrupted double-linked list')) {
-      throw new RuntimeError('CorruptedList');
+      throw new RuntimeError({
+        message: 'CorruptedList',
+        detail: error.message,
+      });
     } else if (
       error.message.toLowerCase().includes('floating point exception')
     ) {
-      throw new RuntimeError('FloatingPointException');
+      throw new RuntimeError({
+        message: 'FloatingPointException',
+        detail: error.message,
+      });
     }
-    throw error;
+
+    throw new RuntimeError({
+      message: 'Unknown',
+      detail: error.message,
+    });
   }
 }

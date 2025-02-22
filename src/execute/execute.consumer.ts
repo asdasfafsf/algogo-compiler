@@ -64,7 +64,6 @@ export class ExecuteConsumer extends WorkerHost {
         return true;
       }
     } catch (e) {
-      console.error(e.stack);
       const format = {
         processTime: 0,
         memory: 0,
@@ -76,6 +75,7 @@ export class ExecuteConsumer extends WorkerHost {
           ...format,
           code: '9000',
           result: '시간 초과',
+          detail: '',
         };
       }
 
@@ -84,6 +84,7 @@ export class ExecuteConsumer extends WorkerHost {
           ...format,
           code: '9001',
           result: '런타임 에러(' + (e.message || 'Unknown') + ')',
+          detail: e.detail,
         };
       }
 
@@ -92,6 +93,7 @@ export class ExecuteConsumer extends WorkerHost {
           ...format,
           code: '9002',
           result: '컴파일 에러',
+          detail: e.detail,
         };
       }
 
@@ -99,6 +101,7 @@ export class ExecuteConsumer extends WorkerHost {
         ...format,
         code: '9999',
         result: '예외 오류',
+        detail: '',
       };
     } finally {
     }

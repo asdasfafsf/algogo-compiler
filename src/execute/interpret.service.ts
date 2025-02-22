@@ -7,7 +7,6 @@ import * as path from 'path';
 import { Logger } from 'winston';
 import Config from '../config/config';
 import { ConfigType } from '@nestjs/config';
-import PreprocessError from './error/preprocess-error';
 import RuntimeError from './error/runtime-error';
 import TimeoutError from './error/timeout-error';
 import ExecuteResultDto from './dto/ExecuteResultDto';
@@ -62,6 +61,7 @@ export class InterpretService implements Execute {
       return {
         code: '0000',
         result: codePath,
+        detail: '',
         processTime: 0,
         memory: 0,
       };
@@ -69,6 +69,7 @@ export class InterpretService implements Execute {
       return {
         code: '9999',
         result: '전처리 오류',
+        detail: '',
         processTime: 0,
         memory: 0,
       };
@@ -78,12 +79,13 @@ export class InterpretService implements Execute {
 
   async execute(codePath: string, input: string): Promise<ExecuteResultDto> {
     const tmpPath = path.dirname(codePath);
+    const fileName = path.basename(codePath);
 
     try {
       const command = this.getExecuteCommand();
-      const commandArgs = this.getExecuteCommandArgs(codePath, codePath, '');
+      const commandArgs = this.getExecuteCommandArgs(fileName, fileName, '');
       const options = {
-        cwd: process.env.TMP_DIR,
+        cwd: tmpPath,
       };
 
       const result = await this.processService.execute(
@@ -103,7 +105,10 @@ export class InterpretService implements Execute {
       }
 
       this.handleError(error);
-      throw error;
+      throw new RuntimeError({
+        message: 'Unknown',
+        detail: '',
+      });
     } finally {
     }
   }
