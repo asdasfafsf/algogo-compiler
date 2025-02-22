@@ -15,6 +15,10 @@ RUN pnpm build
 FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+# 로케일 관련 환경 변수 설정
+ENV LANG=ko_KR.UTF-8
+ENV LANGUAGE=ko_KR:en
+ENV LC_ALL=ko_KR.UTF-8
 
 # Update package list and install runtime dependencies
 RUN apt-get update && apt-get install -y \
@@ -25,7 +29,13 @@ RUN apt-get update && apt-get install -y \
     wget \
     software-properties-common \
     curl \
+    locales \
     && rm -rf /var/lib/apt/lists/*
+
+# 로케일 생성 및 설정
+RUN locale-gen ko_KR.UTF-8 \
+    && update-locale LANG=ko_KR.UTF-8 \
+    && dpkg-reconfigure --frontend noninteractive locales
 
 # Install Node.js 22 (to provide npm and pnpm)
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
@@ -59,5 +69,5 @@ COPY --from=builder /usr/src/app/pnpm-lock.yaml ./pnpm-lock.yaml
 # Install pnpm and only production dependencies
 RUN npm install -g pnpm && pnpm install --frozen-lockfile --prod
 
-# Default command
-CMD ["node", "dist/main"]
+# Default command with Java file encoding options
+CMD ["node", "dist/main", "-Dfile.encoding=UTF-8", "-Dsun.jnu.encoding=UTF-8"]
