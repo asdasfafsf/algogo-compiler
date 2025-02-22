@@ -7,11 +7,9 @@ import * as path from 'path';
 import { Logger } from 'winston';
 import Config from '../config/config';
 import { ConfigType } from '@nestjs/config';
-import PreprocessError from './error/preprocess-error';
 import RuntimeError from './error/runtime-error';
 import TimeoutError from './error/timeout-error';
 import ExecuteResultDto from './dto/ExecuteResultDto';
-import { CustomError } from './error/custom-error';
 
 @Injectable()
 export class InterpretService implements Execute {
@@ -81,12 +79,13 @@ export class InterpretService implements Execute {
 
   async execute(codePath: string, input: string): Promise<ExecuteResultDto> {
     const tmpPath = path.dirname(codePath);
+    const fileName = path.basename(codePath);
 
     try {
       const command = this.getExecuteCommand();
-      const commandArgs = this.getExecuteCommandArgs(codePath, codePath, '');
+      const commandArgs = this.getExecuteCommandArgs(fileName, fileName, '');
       const options = {
-        cwd: process.env.TMP_DIR,
+        cwd: tmpPath,
       };
 
       const result = await this.processService.execute(

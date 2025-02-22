@@ -66,20 +66,17 @@ export class ExecuteService implements Execute {
       const compiledFileExtension = this.getCompiledFileExtension()
         ? `.${this.getCompiledFileExtension()}`
         : '';
-      const compiledFilePath = path.resolve(
-        tmpDir,
-        `Main${compiledFileExtension}`,
-      );
+      const compiledFilePath = `Main${compiledFileExtension}`;
 
       const command = this.getCompileCommand();
       const commandArgs = this.getCompileCommandArgs(
-        codePath,
-        compiledFilePath,
+        path.basename(codePath),
+        path.basename(compiledFilePath),
         code,
       );
 
       const options = {
-        cwd: process.env.TMP_DIR,
+        cwd: tmpDir,
       };
       const result = await this.processService.execute(
         command,
@@ -90,15 +87,13 @@ export class ExecuteService implements Execute {
       return {
         code: '0000',
         ...result,
-        result: compiledFilePath,
+        result: path.resolve(tmpDir, compiledFilePath),
       };
     } catch (e) {
       this.fileService.removeDir(tmpDir);
       this.logger.error(e);
-      console.log('야야야야');
-      console.log(e.message);
       throw new CompileError({
-        message: e.message,
+        message: '컴파일 에러',
         detail: e.message,
       });
     } finally {
@@ -119,14 +114,17 @@ export class ExecuteService implements Execute {
     try {
       this.logger.silly(`start process`);
       const command = this.getExecuteCommand(filePath, compiledFilePath, '');
-      const commandArgs = this.getExecuteCommandArgs(
-        filePath,
-        compiledFilePath,
-        '',
-      );
-      const options = {};
+      const commandArgs = this.getExecuteCommandArgs(filePath, '', '');
+      const options = {
+        cwd: tmpPath,
+      };
 
-      this.logger.silly(`start execute`);
+      this.logger.silly(`start execute`, {
+        command: command,
+        commandArgs: commandArgs,
+        options: options,
+        input: input,
+      });
       const result = await this.processService.execute(
         command,
         commandArgs,

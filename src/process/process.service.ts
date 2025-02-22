@@ -33,7 +33,6 @@ export class ProcessService {
     input: string = '',
   ): Promise<ExecuteResultDto> {
     option.timeout = 2000;
-    option.cwd = this.config.tmpDir;
 
     const uuid = uuidv7();
     const startTime = performance.now();
@@ -90,6 +89,7 @@ export class ProcessService {
             processTime: Number((performance.now() - startTime).toFixed(1)),
             memory: Number((currentMemory / Math.pow(1024, 2)).toFixed(1)),
             result: results.join('\n'),
+            detail: '',
           });
           childProcess.kill('SIGKILL');
         }
