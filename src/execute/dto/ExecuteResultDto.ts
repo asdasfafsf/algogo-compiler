@@ -3,4 +3,5 @@ export default class ExecuteResultDto {
   memory: number;
   result: string;
   code: string;
+  detail: string;
 }

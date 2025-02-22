@@ -1,6 +1,8 @@
-export default class RuntimeError extends Error {
-  constructor(message?: string) {
-    super(message);
+import { CustomError } from './custom-error';
+
+export default class RuntimeError extends CustomError {
+  constructor({ message, detail }) {
+    super({ message, detail });
     this.name = 'RUNTIME ERROR';
   }
 }

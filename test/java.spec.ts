@@ -11,9 +11,7 @@ import config from '../src/config/config';
 import { join } from 'path';
 import { promises as fs } from 'fs';
 import { JavaExecuteService } from '../src/execute/java-execute.service';
-import TimeoutError from '../src/execute/error/timeout-error';
 import RuntimeError from '../src/execute/error/runtime-error';
-import CompileError from '../src/execute/error/compile-error';
 
 describe('javaExecuteService', () => {
   let javaExecuteService: JavaExecuteService;
