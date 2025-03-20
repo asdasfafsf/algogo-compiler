@@ -31,7 +31,6 @@ export class ExecuteConsumer extends WorkerHost {
     const { provider, id, seq } = data;
     const executor = await this.executorFactory.get(provider);
 
-    console.log(job.id + 'dddd');
     try {
       if (name === 'compile') {
         const { code } = data;
