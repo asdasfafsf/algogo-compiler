@@ -1,7 +1,7 @@
 export const EXECUTE_CODE = {
   COMPILE_ERROR: '9001',
   RUNTIME_ERROR: '9002',
-  TIMEOUT_ERROR: '9003',
+  TIMEOUT_ERROR: '9000',
   SUCCESS: '0000',
   ERROR: '9999',
 } as const;
@@ -9,7 +9,7 @@ export const EXECUTE_CODE = {
 export const EXECUTE_MESSAGE = {
   COMPILE_ERROR: '컴파일 오류',
   RUNTIME_ERROR: '런타임 오류',
-  TIMEOUT_ERROR: '타임아웃',
+  TIMEOUT_ERROR: '시간 초과',
   SUCCESS: '성공',
   ERROR: '예외 오류',
 } as const;
