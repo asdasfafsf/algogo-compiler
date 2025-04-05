@@ -10,7 +10,7 @@ import RuntimeError from './error/runtime-error';
 import { Logger } from 'winston';
 import TimeoutError from './error/timeout-error';
 import ExecuteResultDto from './dto/ExecuteResultDto';
-import { CustomError } from './error/custom-error';
+import { EXECUTE_RESULT } from './constants/common';
 
 @Injectable()
 export class ExecuteService implements Execute {
@@ -85,7 +85,7 @@ export class ExecuteService implements Execute {
       );
 
       return {
-        code: '0000',
+        ...EXECUTE_RESULT.SUCCESS,
         ...result,
         result: path.resolve(tmpDir, compiledFilePath),
       };
@@ -132,7 +132,7 @@ export class ExecuteService implements Execute {
         input,
       );
       return {
-        code: '0000',
+        ...EXECUTE_RESULT.SUCCESS,
         ...result,
       };
     } catch (e) {
