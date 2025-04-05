@@ -96,8 +96,8 @@ export class InterpretService implements Execute {
         input,
       );
       return {
-        ...result,
         ...EXECUTE_RESULT.SUCCESS,
+        ...result,
       };
     } catch (error) {
       this.logger.error('error', error);
