@@ -8,9 +8,14 @@ import {
 import CompileError from './error/compile-error';
 import RuntimeError from './error/runtime-error';
 import TimeoutError from './error/timeout-error';
-import ExecuteResultDto from './dto/ExecuteResultDto';
 import { FileService } from 'src/file/file.service';
 import * as path from 'path';
+import ExecuteResultDto from './dto/ExecuteResultDto';
+import {
+  EXECUTE_CODE,
+  EXECUTE_MESSAGE,
+  EXECUTE_RESULT,
+} from './constants/common';
 
 @Processor('execute')
 @Injectable()
@@ -21,89 +26,95 @@ export class ExecuteConsumer extends WorkerHost {
     private readonly fileService: FileService,
   ) {
     super();
-    this.cache = new Map();
   }
 
-  private cache: Map<string, ExecuteResultDto>;
-
-  async process(job: Job): Promise<any> {
-    const { name, data } = job;
-    const { provider, id, seq } = data;
+  async process(job: Job): Promise<ExecuteResultDto> {
+    const { data } = job;
+    const { id, provider, inputList } = data;
     const executor = await this.executorFactory.get(provider);
 
-    try {
-      if (name === 'compile') {
-        const { code } = data;
-        const compileResult = await executor.compile(code);
-        this.cache.set(id, compileResult);
+    let filePath = '';
 
+    try {
+      const compileResult = await executor.compile(data.code);
+
+      if (compileResult.code !== EXECUTE_CODE.SUCCESS) {
         return {
           ...compileResult,
+          ...EXECUTE_RESULT.COMPILE_ERROR,
+          processTime: 0,
+          memory: 0,
         };
-      } else if (name === 'execute') {
-        const { input, seq } = data;
-        const compileResult = this.cache.get(id);
-
-        if (compileResult.code !== '0000') {
-          return {
-            ...compileResult,
-            result: '컴파일 오류',
-          };
-        }
-        const executeResult = await executor.execute(
-          compileResult.result,
-          input,
-        );
-        return { ...executeResult, seq };
-      } else {
-        const compileResult = this.cache.get(id);
-        if (compileResult) {
-          this.cache.delete(id ?? '');
-          this.fileService.removeDir(path.dirname(compileResult.result));
-        }
-        return true;
       }
+
+      job.updateProgress({ stage: 'compile', ...EXECUTE_RESULT.SUCCESS });
+      filePath = compileResult.result;
+
+      for (const { seq, input } of inputList) {
+        const executeResult = await executor
+          .execute(compileResult.result, input)
+          .catch((e) => {
+            if (e instanceof RuntimeError) {
+              return {
+                code: EXECUTE_CODE.RUNTIME_ERROR,
+                result:
+                  EXECUTE_MESSAGE.RUNTIME_ERROR +
+                  '(' +
+                  (e.message || 'Unknown') +
+                  ')',
+                detail: e.detail,
+                processTime: 0,
+                memory: 0,
+              };
+            }
+
+            if (e instanceof TimeoutError) {
+              return {
+                ...EXECUTE_RESULT.TIMEOUT_ERROR,
+                detail: '',
+                processTime: 0,
+                memory: 0,
+              };
+            }
+
+            return {
+              ...EXECUTE_RESULT.ERROR,
+              detail: '',
+              processTime: 0,
+              memory: 0,
+            };
+          });
+        job.updateProgress({ stage: 'execute', id, seq, ...executeResult });
+      }
+
+      return {
+        ...EXECUTE_RESULT.SUCCESS,
+        detail: '',
+        processTime: 0,
+        memory: 0,
+      };
     } catch (e) {
       const format = {
         processTime: 0,
         memory: 0,
-        seq,
       };
-
-      if (e instanceof TimeoutError) {
-        return {
-          ...format,
-          code: '9000',
-          result: '시간 초과',
-          detail: '',
-        };
-      }
-
-      if (e instanceof RuntimeError) {
-        return {
-          ...format,
-          code: '9001',
-          result: '런타임 에러(' + (e.message || 'Unknown') + ')',
-          detail: e.detail,
-        };
-      }
-
       if (e instanceof CompileError) {
         return {
           ...format,
-          code: '9002',
-          result: '컴파일 에러',
+          ...EXECUTE_RESULT.COMPILE_ERROR,
           detail: e.detail,
         };
       }
 
       return {
         ...format,
-        code: '9999',
-        result: '예외 오류',
+        ...EXECUTE_RESULT.ERROR,
         detail: '',
       };
     } finally {
+      if (filePath) {
+        this.fileService.removeDir(path.dirname(filePath));
+      }
     }
   }
 }

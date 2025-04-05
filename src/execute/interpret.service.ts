@@ -10,6 +10,7 @@ import { ConfigType } from '@nestjs/config';
 import RuntimeError from './error/runtime-error';
 import TimeoutError from './error/timeout-error';
 import ExecuteResultDto from './dto/ExecuteResultDto';
+import { EXECUTE_RESULT } from './constants/common';
 
 @Injectable()
 export class InterpretService implements Execute {
@@ -95,8 +96,8 @@ export class InterpretService implements Execute {
         input,
       );
       return {
+        ...EXECUTE_RESULT.SUCCESS,
         ...result,
-        code: '0000',
       };
     } catch (error) {
       this.logger.error('error', error);
