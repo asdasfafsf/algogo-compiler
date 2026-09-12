@@ -59,6 +59,12 @@ export class ProcessService {
       const result = [];
       const stdError = [];
 
+      childProcess.stdin.on('error', (error: NodeJS.ErrnoException) => {
+        if (error.code !== 'EPIPE') {
+          reject(error);
+        }
+      });
+
       this.logger.silly('process input : ' + input);
       if (input) {
         childProcess.stdin.write(input);
