@@ -1,8 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RunService } from '../src/execute/run.service';
-import executeProvider, {
-  ExecuteProvider,
-} from '../src/execute/execute.provider';
+import executeProvider from '../src/execute/execute.provider';
 import { ConfigModule } from '@nestjs/config';
 import {
   WinstonModule,
@@ -22,6 +20,8 @@ import { CppExecuteService } from '../src/execute/cpp-execute.service';
 import { Java17ExecuteService } from '../src/execute/java17-execute.service';
 import { ClangExecuteService } from '../src/execute/clang-execute.service';
 import { timeoutErrorCodes } from './code/timeout.error';
+import { LanguageProvider } from '../src/common/enum/LanguageProviderEnum';
+import { EXECUTE_CODE } from '../src/execute/constants/common';
 
 describe('RunService', () => {
   let runService: RunService;
@@ -51,6 +51,7 @@ describe('RunService', () => {
         WinstonModule.forRoot({
           transports: [
             new winston.transports.Console({
+              silent: true,
               level: 'info',
               format: winston.format.combine(
                 winston.format.timestamp(),
@@ -77,13 +78,13 @@ describe('RunService', () => {
     expect(runService).toBeDefined();
   });
 
-  const providers: ExecuteProvider[] = [
-    'java',
-    'cpp',
-    'clang',
-    'java17',
-    'javascript',
-    'python',
+  const providers: LanguageProvider[] = [
+    LanguageProvider.JAVA,
+    LanguageProvider.CPP,
+    LanguageProvider.CLANG,
+    LanguageProvider.JAVA17,
+    LanguageProvider.NODEJS,
+    LanguageProvider.PYTHON,
   ];
 
   for (const provider of providers) {
@@ -96,7 +97,7 @@ describe('RunService', () => {
         input,
       );
       const { code } = executeResult;
-      expect(code).toBe(`9000`);
+      expect(code).toBe(EXECUTE_CODE.TIMEOUT_ERROR);
     }, 10000);
   }
 });

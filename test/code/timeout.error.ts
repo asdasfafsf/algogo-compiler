@@ -1,51 +1,29 @@
-import { ExecuteProvider } from 'apps/compiler/src/execute/execute.provider';
+import { LanguageProvider } from '../../src/common/enum/LanguageProviderEnum';
 
-export const timeoutErrorCodes: { [key in ExecuteProvider]: string } = {
-  java: `public class Main {
+export const timeoutErrorCodes: Record<LanguageProvider, string> = {
+  [LanguageProvider.JAVA]: `public class Main {
     public static void main(String[] args) {
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        while (true) {}
     }
 }`,
-  cpp: `#include <iostream>
-#include <thread>
-#include <chrono>
-
-int main() {
-    std::this_thread::sleep_for(std::chrono::seconds(10));
-    return 0;
-}`,
-  clang: `#include <iostream>
-#include <thread>
-#include <chrono>
-
-int main() {
-    std::this_thread::sleep_for(std::chrono::seconds(10));
-    return 0;
-}`,
-  java17: `public class Main {
+  [LanguageProvider.JAVA17]: `public class Main {
     public static void main(String[] args) {
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        while (true) {}
     }
 }`,
-  javascript: `function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function main() {
-    await sleep(10000);
-}
-
-main();`,
-  python: `import time
-
-time.sleep(10)
-`,
+  [LanguageProvider.CPP]: `int main() {
+    volatile unsigned long long counter = 0;
+    while (true) {
+        counter++;
+    }
+}`,
+  [LanguageProvider.CLANG]: `int main() {
+    volatile unsigned long long counter = 0;
+    while (1) {
+        counter++;
+    }
+}`,
+  [LanguageProvider.NODEJS]: `while (true) {}`,
+  [LanguageProvider.PYTHON]: `while True:
+    pass`,
 };
