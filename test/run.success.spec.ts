@@ -1,8 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RunService } from '../src/execute/run.service';
-import executeProvider, {
-  ExecuteProvider,
-} from '../src/execute/execute.provider';
+import executeProvider from '../src/execute/execute.provider';
 import { ConfigModule } from '@nestjs/config';
 import {
   WinstonModule,
@@ -23,6 +21,7 @@ import { Java17ExecuteService } from '../src/execute/java17-execute.service';
 import { ClangExecuteService } from '../src/execute/clang-execute.service';
 import { successCodes } from './code/success';
 import { cppCode } from './code/cpp.success';
+import { LanguageProvider } from '../src/common/enum/LanguageProviderEnum';
 
 describe('RunService', () => {
   let runService: RunService;
@@ -51,6 +50,7 @@ describe('RunService', () => {
         WinstonModule.forRoot({
           transports: [
             new winston.transports.Console({
+              silent: true,
               level: 'info',
               format: winston.format.combine(
                 winston.format.timestamp(),
@@ -77,17 +77,17 @@ describe('RunService', () => {
     expect(runService).toBeDefined();
   });
 
-  const providers: ExecuteProvider[] = [
-    'java',
-    'cpp',
-    'clang',
-    'java17',
-    'javascript',
-    'python',
+  const providers: LanguageProvider[] = [
+    LanguageProvider.JAVA,
+    LanguageProvider.CPP,
+    LanguageProvider.CLANG,
+    LanguageProvider.JAVA17,
+    LanguageProvider.NODEJS,
+    LanguageProvider.PYTHON,
   ];
 
   const testExecution = (
-    provider: ExecuteProvider,
+    provider: LanguageProvider,
     code: string,
     input: string,
     expected: string,
@@ -110,13 +110,21 @@ describe('RunService', () => {
 
   it('test of cpp', async () => {
     const input = `2\nGCF\nACDEB`;
-    const responseCpp = await runService.execute('cpp', cppCode, input);
+    const responseCpp = await runService.execute(
+      LanguageProvider.CPP,
+      cppCode,
+      input,
+    );
     expect(responseCpp.result).toBe('99437');
   });
 
   it('test of clang', async () => {
     const input = `2\nGCF\nACDEB`;
-    const responseCpp = await runService.execute('clang', cppCode, input);
+    const responseCpp = await runService.execute(
+      LanguageProvider.CLANG,
+      cppCode,
+      input,
+    );
     expect(responseCpp.result).toBe('99437');
   });
 });

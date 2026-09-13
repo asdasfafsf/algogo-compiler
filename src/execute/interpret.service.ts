@@ -51,8 +51,9 @@ export class InterpretService implements Execute {
   }
 
   async compile(code: string) {
+    let tmpDir = '';
     try {
-      const tmpDir = await this.fileService.tmpDir(this.config.tmpDir);
+      tmpDir = await this.fileService.tmpDir(this.config.tmpDir);
       const fileExtension = this.getFileExtension()
         ? `.${this.getFileExtension()}`
         : '';
@@ -66,7 +67,10 @@ export class InterpretService implements Execute {
         processTime: 0,
         memory: 0,
       };
-    } catch (e) {
+    } catch {
+      if (tmpDir) {
+        await this.fileService.removeDir(tmpDir);
+      }
       return {
         code: '9999',
         result: '전처리 오류',
@@ -74,7 +78,6 @@ export class InterpretService implements Execute {
         processTime: 0,
         memory: 0,
       };
-    } finally {
     }
   }
 
@@ -110,7 +113,6 @@ export class InterpretService implements Execute {
         message: 'Unknown',
         detail: '',
       });
-    } finally {
     }
   }
   handleError(error: Error) {}

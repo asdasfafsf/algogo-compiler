@@ -13,10 +13,12 @@ import { JavascriptInterpretService } from '../src/execute/javascript-interpret.
 import { promises as fs } from 'fs';
 import TimeoutError from '../src/execute/error/timeout-error';
 import RuntimeError from '../src/execute/error/runtime-error';
+import { FileService } from '../src/file/file.service';
 
 describe('JavascriptInterpretService', () => {
   let javascriptInterpretService: JavascriptInterpretService;
   let module: TestingModule;
+  let fileService: FileService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -30,6 +32,7 @@ describe('JavascriptInterpretService', () => {
         WinstonModule.forRoot({
           transports: [
             new winston.transports.Console({
+              silent: true,
               level: 'silly',
               format: winston.format.combine(
                 winston.format.timestamp(),
@@ -48,6 +51,7 @@ describe('JavascriptInterpretService', () => {
     javascriptInterpretService = module.get<JavascriptInterpretService>(
       JavascriptInterpretService,
     );
+    fileService = module.get<FileService>(FileService);
   });
 
   afterAll(async () => {
@@ -61,7 +65,7 @@ describe('JavascriptInterpretService', () => {
   const runTestWithErrorExpectation = async (
     sourceFileName: string,
     inputFileName: string,
-    expectedError: any,
+    expectedError: typeof RuntimeError | typeof TimeoutError,
     errorMessageContains: string,
   ) => {
     const inputPath = join(__dirname, `code/javascript/${inputFileName}`);
@@ -70,13 +74,19 @@ describe('JavascriptInterpretService', () => {
     const input = await fs.readFile(inputPath, 'utf-8');
     const source = await fs.readFile(sourcePath, 'utf-8');
 
+    const compileResult = await javascriptInterpretService.compile(source);
+    let thrown: unknown;
     try {
-      await javascriptInterpretService.execute(source, input);
+      await javascriptInterpretService.execute(compileResult.result, input);
     } catch (e) {
-      expect(e).toBeInstanceOf(expectedError);
-      if (errorMessageContains) {
-        expect(e.message).toBe(errorMessageContains);
-      }
+      thrown = e;
+    } finally {
+      await fileService.removeDir(join(compileResult.result, '..'));
+    }
+
+    expect(thrown).toBeInstanceOf(expectedError);
+    if (errorMessageContains && thrown instanceof Error) {
+      expect(thrown.message).toContain(errorMessageContains);
     }
   };
 

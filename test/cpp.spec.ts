@@ -11,12 +11,13 @@ import config from '../src/config/config';
 import { join } from 'path';
 import { CppExecuteService } from '../src/execute/cpp-execute.service';
 import { promises as fs } from 'fs';
-import TimeoutError from '../src/execute/error/timeout-error';
 import RuntimeError from '../src/execute/error/runtime-error';
+import { FileService } from '../src/file/file.service';
 
 describe('CppExecuteService - Error Tests', () => {
   let cppExecuteService: CppExecuteService;
   let module: TestingModule;
+  let fileService: FileService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -30,6 +31,7 @@ describe('CppExecuteService - Error Tests', () => {
         WinstonModule.forRoot({
           transports: [
             new winston.transports.Console({
+              silent: true,
               level: 'silly',
               format: winston.format.combine(
                 winston.format.timestamp(),
@@ -46,6 +48,7 @@ describe('CppExecuteService - Error Tests', () => {
     }).compile();
 
     cppExecuteService = module.get<CppExecuteService>(CppExecuteService);
+    fileService = module.get<FileService>(FileService);
   });
 
   afterAll(async () => {
@@ -54,7 +57,7 @@ describe('CppExecuteService - Error Tests', () => {
 
   const runTestWithErrorExpectation = async (
     sourceFileName: string,
-    expectedError: any,
+    expectedError: typeof RuntimeError,
     errorMessageContains: string,
   ) => {
     const sourcePath = join(__dirname, `code/cpp/${sourceFileName}`);
@@ -64,18 +67,29 @@ describe('CppExecuteService - Error Tests', () => {
     );
     const source = await fs.readFile(sourcePath, 'utf-8');
     const input = await fs.readFile(inputPath, 'utf-8');
+    const compileResult = await cppExecuteService.compile(source);
+    let thrown: unknown;
     try {
-      await cppExecuteService.execute(source, input);
-      throw new Error('');
+      await cppExecuteService.execute(compileResult.result, input);
     } catch (e) {
-      expect(e).toBeInstanceOf(expectedError);
-      if (errorMessageContains) {
-        expect(e.message).toContain(errorMessageContains);
-      }
+      thrown = e;
+    } finally {
+      await fileService.removeDir(join(compileResult.result, '..'));
     }
 
-    // throw new Error('exception not occured');
+    expect(thrown).toBeInstanceOf(expectedError);
+    if (errorMessageContains && thrown instanceof Error) {
+      expect(thrown.message).toContain(errorMessageContains);
+    }
   };
+
+  it('assert 실패를 런타임 오류로 반환한다', async () => {
+    await runTestWithErrorExpectation(
+      'assertion.failed.cpp',
+      RuntimeError,
+      'AssertionFailed',
+    );
+  }, 10000);
 
   // it('should throw segfault error', async () => {
   //   await runTestWithErrorExpectation(

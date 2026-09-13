@@ -13,10 +13,12 @@ import { promises as fs } from 'fs';
 import TimeoutError from '../src/execute/error/timeout-error';
 import RuntimeError from '../src/execute/error/runtime-error';
 import { PythonInterpretService } from '../src/execute/python-interpret.service';
+import { FileService } from '../src/file/file.service';
 
 describe('pythonInterpretService', () => {
   let pythonInterpretService: PythonInterpretService;
   let module: TestingModule;
+  let fileService: FileService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -30,6 +32,7 @@ describe('pythonInterpretService', () => {
         WinstonModule.forRoot({
           transports: [
             new winston.transports.Console({
+              silent: true,
               level: 'silly',
               format: winston.format.combine(
                 winston.format.timestamp(),
@@ -48,6 +51,7 @@ describe('pythonInterpretService', () => {
     pythonInterpretService = module.get<PythonInterpretService>(
       PythonInterpretService,
     );
+    fileService = module.get<FileService>(FileService);
   });
 
   afterAll(async () => {
@@ -61,7 +65,7 @@ describe('pythonInterpretService', () => {
   const runTestWithErrorExpectation = async (
     sourceFileName: string,
     inputFileName: string,
-    expectedError: any,
+    expectedError: typeof RuntimeError | typeof TimeoutError,
     errorMessageContains?: string,
   ) => {
     const inputPath = join(__dirname, `code/python/${inputFileName}`);
@@ -70,13 +74,19 @@ describe('pythonInterpretService', () => {
     const input = await fs.readFile(inputPath, 'utf-8');
     const source = await fs.readFile(sourcePath, 'utf-8');
 
+    const compileResult = await pythonInterpretService.compile(source);
+    let thrown: unknown;
     try {
-      await pythonInterpretService.execute(source, input);
+      await pythonInterpretService.execute(compileResult.result, input);
     } catch (e) {
-      expect(e).toBeInstanceOf(expectedError);
-      if (errorMessageContains) {
-        expect(e.message).toBe(errorMessageContains);
-      }
+      thrown = e;
+    } finally {
+      await fileService.removeDir(join(compileResult.result, '..'));
+    }
+
+    expect(thrown).toBeInstanceOf(expectedError);
+    if (errorMessageContains && thrown instanceof Error) {
+      expect(thrown.message).toContain(errorMessageContains);
     }
   };
 
