@@ -26,14 +26,14 @@
     "test:local": "docker compose -f compose.test.yml up --build --abort-on-container-exit --exit-code-from tests"
   },
   "dependencies": {
-    "@nestjs/bullmq": "^10.2.3",
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/config": "^3.3.0",
-    "@nestjs/core": "^10.0.0",
-    "@nestjs/platform-express": "^10.0.0",
-    "bullmq": "^5.13.0",
-    "joi": "^17.13.3",
-    "nest-winston": "^1.9.7",
+    "@nestjs/bullmq": "^11.0.5",
+    "@nestjs/common": "^11.2.3",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.2.3",
+    "@nestjs/platform-express": "^11.2.3",
+    "bullmq": "^5.58.5",
+    "joi": "^17.13.6",
+    "nest-winston": "^1.10.2",
     "pidusage": "^3.0.2",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
@@ -41,9 +41,9 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
-    "@nestjs/cli": "^10.0.0",
-    "@nestjs/schematics": "^10.0.0",
-    "@nestjs/testing": "^10.0.0",
+    "@nestjs/cli": "^11.0.24",
+    "@nestjs/schematics": "^11.0.9",
+    "@nestjs/testing": "^11.2.3",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.2",
     "@types/node": "^20.3.1",
@@ -83,5 +83,38 @@
       "^src/(.*)$": "<rootDir>/$1"
     }
   },
-  "packageManager": "pnpm@10.32.1"
+  "packageManager": "pnpm@10.32.1",
+  "pnpm": {
+    "overrides": {
+      "@babel/core@<8": "7.29.6",
+      "@babel/helpers@<8": "7.29.2",
+      "ajv@<7": "6.14.0",
+      "ajv@>=7 <9": "8.18.0",
+      "body-parser@<2": "1.20.6",
+      "brace-expansion@<2": "1.1.18",
+      "brace-expansion@>=2 <3": "2.1.4",
+      "browserslist@<5": "4.28.7",
+      "diff@>=4 <5": "4.0.4",
+      "fast-uri@>=3 <4": "3.1.6",
+      "flatted@<4": "3.4.2",
+      "form-data@>=4 <5": "4.0.6",
+      "formidable@>=3 <4": "3.5.3",
+      "glob@>=10 <11": "10.5.0",
+      "js-yaml@<4": "3.15.2",
+      "js-yaml@>=4 <5": "4.3.2",
+      "lodash@>=4 <5": "4.18.0",
+      "minimatch@<4": "3.1.4",
+      "minimatch@>=5 <6": "5.1.8",
+      "minimatch@>=9 <10": "9.0.7",
+      "multer@<3": "2.3.0",
+      "path-to-regexp@<1": "0.1.13",
+      "picomatch@<3": "2.3.2",
+      "picomatch@>=4 <5": "4.0.4",
+      "qs@>=6 <7": "6.16.0",
+      "serialize-javascript@>=5 <8": "7.0.5",
+      "tmp@<1": "0.2.6",
+      "uuid@<12": "11.1.1",
+      "webpack@>=5 <6": "5.104.1"
+    }
+  }
 }
