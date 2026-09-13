@@ -10,7 +10,8 @@ import RuntimeError from './error/runtime-error';
 import CompileError from './error/compile-error';
 import { LanguageProvider } from '../common/enum/LanguageProviderEnum';
 import { FileService } from '../file/file.service';
-import path from 'path';
+import * as path from 'path';
+import { EXECUTE_CODE } from './constants/common';
 
 @Injectable()
 export class RunService {
@@ -31,10 +32,15 @@ export class RunService {
     try {
       const executor = await this.executorFactory.get(provider);
       const compileResult = await executor.compile(code);
-      filePath = path.basename(compileResult.result);
+
+      if (compileResult.code !== EXECUTE_CODE.SUCCESS) {
+        return compileResult;
+      }
+
+      filePath = compileResult.result;
       const result = await executor.execute(compileResult.result, input);
 
-      return { ...result, code: '0000' };
+      return { ...result, code: EXECUTE_CODE.SUCCESS };
     } catch (e) {
       const format = {
         processTime: 0,
@@ -44,7 +50,7 @@ export class RunService {
       if (e instanceof TimeoutError) {
         return {
           ...format,
-          code: '9000',
+          code: EXECUTE_CODE.TIMEOUT_ERROR,
           result: '시간 초과',
           detail: '',
         };
@@ -53,7 +59,7 @@ export class RunService {
       if (e instanceof RuntimeError) {
         return {
           ...format,
-          code: '9001',
+          code: EXECUTE_CODE.RUNTIME_ERROR,
           result: '런타임 에러(' + (e.message || 'Unknown') + ')',
           detail: e.detail,
         };
@@ -62,21 +68,23 @@ export class RunService {
       if (e instanceof CompileError) {
         return {
           ...format,
-          code: '9002',
+          code: EXECUTE_CODE.COMPILE_ERROR,
           result: '컴파일 에러',
           detail: e.detail,
         };
       }
 
-      this.logger.error(e.message);
+      this.logger.error(e instanceof Error ? e.message : String(e));
       return {
         ...format,
-        code: '9999',
+        code: EXECUTE_CODE.ERROR,
         result: '예외 오류',
         detail: '',
       };
     } finally {
-      this.fileService.removeDir(filePath);
+      if (filePath) {
+        await this.fileService.removeDir(path.dirname(filePath));
+      }
     }
   }
 }

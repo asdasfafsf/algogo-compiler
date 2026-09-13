@@ -20,7 +20,8 @@ import { CppExecuteService } from '../src/execute/cpp-execute.service';
 import { Java17ExecuteService } from '../src/execute/java17-execute.service';
 import { ClangExecuteService } from '../src/execute/clang-execute.service';
 import { runtimeErrorCode } from './code/runtime.error';
-import { LanguageProvider } from 'src/common/enum/LanguageProviderEnum';
+import { LanguageProvider } from '../src/common/enum/LanguageProviderEnum';
+import { EXECUTE_CODE } from '../src/execute/constants/common';
 
 describe('RunService', () => {
   let runService: RunService;
@@ -49,6 +50,7 @@ describe('RunService', () => {
         WinstonModule.forRoot({
           transports: [
             new winston.transports.Console({
+              silent: true,
               level: 'info',
               format: winston.format.combine(
                 winston.format.timestamp(),
@@ -94,7 +96,7 @@ describe('RunService', () => {
         input,
       );
       const { code } = executeResult;
-      expect(code).toBe('9001');
+      expect(code).toBe(EXECUTE_CODE.RUNTIME_ERROR);
     });
   }
 });

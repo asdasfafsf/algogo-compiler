@@ -1,0 +1,26 @@
+name: algogo-compiler-tests
+services:
+  redis:
+    image: redis:7
+    command: [redis-server, --save, '', --appendonly, 'no']
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 1s
+      timeout: 2s
+      retries: 20
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    init: true
+    environment:
+      NODE_ENV: test
+      TMP_DIR: /tmp/algogo-compiler-test-
+      BULLMQ_HOST: redis
+      BULLMQ_PORT: '6379'
+      BULLMQ_QUEUE_NAME: execute
+    depends_on:
+      redis:
+        condition: service_healthy
+    mem_limit: 2g
+    pids_limit: 256

@@ -12,10 +12,12 @@ import { join } from 'path';
 import { promises as fs } from 'fs';
 import { JavaExecuteService } from '../src/execute/java-execute.service';
 import RuntimeError from '../src/execute/error/runtime-error';
+import { FileService } from '../src/file/file.service';
 
 describe('javaExecuteService', () => {
   let javaExecuteService: JavaExecuteService;
   let module: TestingModule;
+  let fileService: FileService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -29,6 +31,7 @@ describe('javaExecuteService', () => {
         WinstonModule.forRoot({
           transports: [
             new winston.transports.Console({
+              silent: true,
               level: 'silly',
               format: winston.format.combine(
                 winston.format.timestamp(),
@@ -45,6 +48,7 @@ describe('javaExecuteService', () => {
     }).compile();
 
     javaExecuteService = module.get<JavaExecuteService>(JavaExecuteService);
+    fileService = module.get<FileService>(FileService);
   });
 
   afterAll(async () => {
@@ -58,7 +62,7 @@ describe('javaExecuteService', () => {
   const runTestWithErrorExpectation = async (
     sourceFileName: string,
     inputFileName: string,
-    expectedError: any,
+    expectedError: typeof RuntimeError,
     errorMessageContains?: string,
   ) => {
     const inputPath = join(__dirname, `code/java/${inputFileName}`);
@@ -67,13 +71,19 @@ describe('javaExecuteService', () => {
     const input = await fs.readFile(inputPath, 'utf-8');
     const source = await fs.readFile(sourcePath, 'utf-8');
 
+    const compileResult = await javaExecuteService.compile(source);
+    let thrown: unknown;
     try {
-      await javaExecuteService.execute(source, input);
+      await javaExecuteService.execute(compileResult.result, input);
     } catch (e) {
-      expect(e).toBeInstanceOf(expectedError);
-      if (errorMessageContains) {
-        expect(e.message).toBe(errorMessageContains);
-      }
+      thrown = e;
+    } finally {
+      await fileService.removeDir(join(compileResult.result, '..'));
+    }
+
+    expect(thrown).toBeInstanceOf(expectedError);
+    if (errorMessageContains && thrown instanceof Error) {
+      expect(thrown.message).toContain(errorMessageContains);
     }
   };
 

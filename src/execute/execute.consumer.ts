@@ -47,8 +47,8 @@ export class ExecuteConsumer extends WorkerHost {
         };
       }
 
-      job.updateProgress({ stage: 'compile', ...EXECUTE_RESULT.SUCCESS });
       filePath = compileResult.result;
+      await job.updateProgress({ stage: 'compile', ...EXECUTE_RESULT.SUCCESS });
 
       for (const { seq, input } of inputList) {
         const executeResult = await executor
@@ -84,7 +84,12 @@ export class ExecuteConsumer extends WorkerHost {
               memory: 0,
             };
           });
-        job.updateProgress({ stage: 'execute', id, seq, ...executeResult });
+        await job.updateProgress({
+          stage: 'execute',
+          id,
+          seq,
+          ...executeResult,
+        });
       }
 
       return {
@@ -113,7 +118,7 @@ export class ExecuteConsumer extends WorkerHost {
       };
     } finally {
       if (filePath) {
-        this.fileService.removeDir(path.dirname(filePath));
+        await this.fileService.removeDir(path.dirname(filePath));
       }
     }
   }
