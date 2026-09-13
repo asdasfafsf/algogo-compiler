@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
 import {
   ChildProcessWithoutNullStreams,
   SpawnOptionsWithoutStdio,
@@ -13,7 +13,7 @@ import { ConfigType } from '@nestjs/config';
 import TimeoutError from '../execute/error/timeout-error';
 
 @Injectable()
-export class ProcessService {
+export class ProcessService implements OnModuleDestroy {
   tasks: Map<string, ChildProcessWithoutNullStreams>;
 
   constructor(
@@ -32,8 +32,6 @@ export class ProcessService {
     option: SpawnOptionsWithoutStdio = {},
     input: string = '',
   ): Promise<ExecuteResultDto> {
-    option.timeout = 2000;
-
     const uuid = uuidv7();
     const startTime = performance.now();
 
@@ -43,6 +41,11 @@ export class ProcessService {
     this.tasks.set(uuid, childProcess);
 
     let currentMemory = 0;
+    let timedOut = false;
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      childProcess.kill('SIGKILL');
+    }, 2000);
 
     const checkProcessUsageInterval = setInterval(async () => {
       try {
@@ -78,26 +81,27 @@ export class ProcessService {
         result.push(e.toString());
       });
 
-      childProcess.on('exit', async () => {
+      childProcess.on('close', (closeCode, closeResult) => {
+        clearTimeout(timeout);
         clearInterval(checkProcessUsageInterval);
-      });
-
-      childProcess.on('close', async (closeCode, closeResult) => {
         const results = result.join('').split('\n');
 
         if (results.at(-1) === '') {
           results.pop();
         }
 
+        if (timedOut) {
+          return reject(new TimeoutError('시간 초과'));
+        }
+
         if (closeCode === 0) {
-          resolve({
+          return resolve({
             code: '0000',
             processTime: Number((performance.now() - startTime).toFixed(1)),
-            memory: Number((currentMemory / Math.pow(1024, 2)).toFixed(1)),
+            memory: Number((currentMemory / 1024 ** 2).toFixed(1)),
             result: results.join('\n'),
             detail: '',
           });
-          childProcess.kill('SIGKILL');
         }
 
         // if (stdError.length === 0 && closeCode !== 0) {
@@ -115,18 +119,12 @@ export class ProcessService {
               ),
             );
             break;
-          case 'SIGTERM':
-            reject(new TimeoutError('시간 초과'));
-            break;
           case 'SIGBUS':
             reject(new Error('BusError'));
+            break;
           default:
-            if (!stdError || stdError.length === 0) {
-              if (closeCode !== 0) {
-                reject(new Error('NZEC'));
-              } else {
-                reject(new Error('Unknown error'));
-              }
+            if (stdError.length === 0) {
+              reject(new Error('NZEC'));
             } else {
               reject(new Error(stdError.join('')));
             }
@@ -134,6 +132,8 @@ export class ProcessService {
       });
 
       childProcess.on('error', (error) => {
+        clearTimeout(timeout);
+        clearInterval(checkProcessUsageInterval);
         reject(error);
       });
 
@@ -148,18 +148,31 @@ export class ProcessService {
     })
       .then((responseExecute) => responseExecute)
       .finally(() => {
+        clearTimeout(timeout);
         clearInterval(checkProcessUsageInterval);
         childProcess.kill('SIGKILL');
         this.tasks.delete(uuid);
       });
   }
 
-  async clearAllProcesses() {
-    this.tasks.forEach((process) => {
-      if (process.killed === false) {
-        process.kill('SIGKILL');
-      }
-    });
+  async onModuleDestroy(): Promise<void> {
+    await this.clearAllProcesses();
+  }
+
+  async clearAllProcesses(): Promise<void> {
+    const activeProcesses = [...this.tasks.values()].filter(
+      (process) => process.exitCode === null && process.signalCode === null,
+    );
+
+    await Promise.all(
+      activeProcesses.map(
+        (process) =>
+          new Promise<void>((resolve) => {
+            process.once('close', resolve);
+            process.kill('SIGKILL');
+          }),
+      ),
+    );
 
     this.tasks.clear();
   }

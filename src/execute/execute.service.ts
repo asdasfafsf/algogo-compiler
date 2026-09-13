@@ -90,13 +90,12 @@ export class ExecuteService implements Execute {
         result: path.resolve(tmpDir, compiledFilePath),
       };
     } catch (e) {
-      this.fileService.removeDir(tmpDir);
+      await this.fileService.removeDir(tmpDir);
       this.logger.error(e);
       throw new CompileError({
         message: '컴파일 에러',
-        detail: e.message,
+        detail: e instanceof Error ? e.message : String(e),
       });
-    } finally {
     }
   }
 
@@ -149,7 +148,6 @@ export class ExecuteService implements Execute {
         message: 'Unknown',
         detail: '',
       });
-    } finally {
     }
   }
 

@@ -11,6 +11,7 @@ export class ProcessManagementService {
         pidusage(pid, (error, stats) => {
           if (error) {
             reject(error);
+            return;
           }
 
           resolve(stats);
@@ -24,7 +25,7 @@ export class ProcessManagementService {
         pid,
         processTime: timestamp,
       };
-    } catch (err) {
+    } catch {
       throw new Error('프로세스 실행 중 오류');
     }
   }
